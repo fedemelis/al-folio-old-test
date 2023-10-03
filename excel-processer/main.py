@@ -123,6 +123,7 @@ def startup():
         with open(CONFIG, "w") as config_file:
             json.dump(dati_utente, config_file)
 
+    pass
     searchForUpdate(dati_utente)
 
 
