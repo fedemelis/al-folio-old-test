@@ -12,8 +12,9 @@ from bibtexparser.bibdatabase import BibDatabase
 from github import Github
 
 def readexcelfile(file_name):
-    # Leggi il file Excel
-    df = pd.read_excel(file_name)
+    #TODO PROBLEMA IN LETTURA FILE EXCEL
+    # Leggi il file Excel con pandas
+    df = pd.read_excel(os.path.join("edata", f"{file_name}.xlsx"))
 
     # Rimuovi le colonne con nomi "unnamed"
     df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
@@ -22,13 +23,13 @@ def readexcelfile(file_name):
     json_data = df.to_json(orient="records", indent=4)
 
     # Salva il JSON su un file
-    with open("C:\\Users\\fede\\Desktop\\dati-json.json", "w") as json_file:
-        json_file.write(json_data)
+    with open(os.path.join("edata", f"{file_name}.json"), "w") as json_data_file:
+        json_data_file.write(json_data)
 
     print("Dati estratti e salvati in formato JSON senza campi 'unnamed'.")
 
     # Leggi il JSON
-    with open("C:\\Users\\fede\\Desktop\\dati-json.json", "r") as json_file:
+    with open(os.path.join("edata", f"{file_name}.json"), "r") as json_file:
         data = json.load(json_file)
 
     print("Dati letti dal file JSON.")
@@ -37,11 +38,17 @@ def readexcelfile(file_name):
     bib_database = BibDatabase()
     for entry in data:
         bib_entry = {
-            'title': entry['Nome'],
-            'author': entry['Autore'],
+            'title': entry['title'],
+            'author': entry['author'],
+            'journal': entry['journal'],
+            'volume': str(entry['volume']),
+            'number': str(entry['number']),
+            'pages': str(entry['pages']),
             'year': str(entry['Anno']),
-            'visibile': str(entry['Visibile']),
-            'ENTRYTYPE': 'article',  # Imposta il tipo di voce BibTeX appropriato
+            'visivle': "true",
+            'ENTRYTYPE': 'article',
+            #'visibile': str(entry['Visibile']),
+            #'ENTRYTYPE': 'article',  # Imposta il tipo di voce BibTeX appropriato
             'ID': str(random.randint(1, 1000)) # Imposta l'ID della voce BibTeX
         }
         bib_database.entries.append(bib_entry)
@@ -49,13 +56,15 @@ def readexcelfile(file_name):
     print("Dati convertiti in formato BibTeX.")
 
     # Salva il file BibTeX
-    with open("C:\\Users\\fede\\Desktop\\dati-bibtex.bib", "w") as bibtex_file:
+    with open(os.path.join("edata", f"{file_name}.bib"), "w") as bibtex_file:
         writer = BibTexWriter()
         bibtex_file.write(writer.write(bib_database))
 
     print("Dati convertiti e salvati in formato BibTeX.")
 
-def web_file_downloader(id, file_name):
+    #TODO gestire l'upload dei file con il metodo gituploader
+
+def web_file_downloader(id, file_name, dati_utente):
     link = f"https://drive.google.com/uc?export=download&id={id}"
     try:
         urllib.request.urlretrieve(link, os.path.join("edata", file_name))
@@ -63,16 +72,17 @@ def web_file_downloader(id, file_name):
         print(e)
         return False
     print("File downloaded successfully")
-    return True
+    readexcelfile(file_name.replace(".xlsx", ""))
+    gituploader(dati_utente)
 
 
-def gituploader(github_username, git_token):
+def gituploader(dati_utente):
 
     #retriving the github instance by action token
-    g = Github(git_token)
+    g = Github(dati_utente.get("_Token"))
 
     #g = Github("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")
-    repo_name = github_username + ".github.io"
+    repo_name = dati_utente.get("_AccountName") + ".github.io"
 
     repo = g.get_user().get_repo(repo_name)
 
@@ -109,12 +119,14 @@ def startup():
         with open(CONFIG, 'r') as config_file:
             dati_utente = json.load(config_file)
     else:
+        account_name = input("Inserisci il tuo nome utente di GitHub: ")
         github_token = input("Inserisci il tuo token di GitHub: ")
         api_key = input("Inserisci la tua Google API key: ")
         link_bibliografia = input("Inserisci il link alla bibliografia: ")
         #TODO: aggiungere campi da compilare
 
         dati_utente = {
+            "_AccountName": account_name,
             "_Token": github_token,
             "_ApiKey": api_key,
             "BibLink": link_bibliografia
@@ -123,18 +135,18 @@ def startup():
         with open(CONFIG, "w") as config_file:
             json.dump(dati_utente, config_file)
 
-    pass
     searchForUpdate(dati_utente)
 
 
 def searchForUpdate(dati_utente):
     # Estrai l'ID del file dal link
+    #TODO modificarlo in modo che prenda sempre il campo dopo /d/
     file_id = dati_utente.get("BibLink").split('/')[-1]
     api_key = dati_utente.get("_ApiKey")
 
     # URL per ottenere i metadati del file utilizzando la chiave API
     metadata_url = f'https://www.googleapis.com/drive/v3/files/{file_id}?fields=name,modifiedTime&key={api_key}'
-
+    print(metadata_url)
     try:
         # Effettua una richiesta GET ai metadati del file
         response = requests.get(metadata_url)
@@ -143,6 +155,7 @@ def searchForUpdate(dati_utente):
             # Estrai l'ora dell'ultima modifica e il nome del file dai metadati
             data = response.json()
             ultima_modifica_drive = datetime.fromisoformat(data['modifiedTime'][:-1])
+            #prendo il nome del file dal json dei metadati
             nome_file = data['name']
 
             # Ottieni l'ora dell'ultima modifica del file locale, se esiste
@@ -155,7 +168,7 @@ def searchForUpdate(dati_utente):
             # Confronta le date di modifica
             if ultima_modifica_locale is None or ultima_modifica_drive > ultima_modifica_locale:
                 # Scarica il file solo se il file su Google Drive è stato modificato più recentemente
-                web_file_downloader(file_id, nome_file)
+                web_file_downloader(file_id, nome_file, dati_utente)
             else:
                 print(f'Il file locale è già aggiornato.')
         else:
