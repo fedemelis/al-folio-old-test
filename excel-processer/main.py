@@ -11,107 +11,6 @@ from bibtexparser.bwriter import BibTexWriter
 from bibtexparser.bibdatabase import BibDatabase
 from github import Github
 
-def readexcelfile(file_name):
-    #TODO PROBLEMA IN LETTURA FILE EXCEL
-    # Leggi il file Excel con pandas
-    df = pd.read_excel(os.path.join("edata", f"{file_name}.xlsx"))
-
-    # Rimuovi le colonne con nomi "unnamed"
-    df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
-
-    # Converti il DataFrame in formato JSON senza includere l'indice
-    json_data = df.to_json(orient="records", indent=4)
-
-    # Salva il JSON su un file
-    with open(os.path.join("edata", f"{file_name}.json"), "w") as json_data_file:
-        json_data_file.write(json_data)
-
-    print("Dati estratti e salvati in formato JSON senza campi 'unnamed'.")
-
-    # Leggi il JSON
-    with open(os.path.join("edata", f"{file_name}.json"), "r") as json_file:
-        data = json.load(json_file)
-
-    print("Dati letti dal file JSON.")
-
-    # Converti il JSON in formato BibTeX
-    bib_database = BibDatabase()
-    for entry in data:
-        bib_entry = {
-            'title': entry['title'],
-            'author': entry['author'],
-            'journal': entry['journal'],
-            'volume': str(entry['volume']),
-            'number': str(entry['number']),
-            'pages': str(entry['pages']),
-            'year': str(entry['Anno']),
-            'visivle': "true",
-            'ENTRYTYPE': 'article',
-            #'visibile': str(entry['Visibile']),
-            #'ENTRYTYPE': 'article',  # Imposta il tipo di voce BibTeX appropriato
-            'ID': str(random.randint(1, 1000)) # Imposta l'ID della voce BibTeX
-        }
-        bib_database.entries.append(bib_entry)
-
-    print("Dati convertiti in formato BibTeX.")
-
-    # Salva il file BibTeX
-    with open(os.path.join("edata", f"{file_name}.bib"), "w") as bibtex_file:
-        writer = BibTexWriter()
-        bibtex_file.write(writer.write(bib_database))
-
-    print("Dati convertiti e salvati in formato BibTeX.")
-
-    #TODO gestire l'upload dei file con il metodo gituploader
-
-def web_file_downloader(id, file_name, dati_utente):
-    link = f"https://drive.google.com/uc?export=download&id={id}"
-    try:
-        urllib.request.urlretrieve(link, os.path.join("edata", file_name))
-    except Exception as e:
-        print(e)
-        return False
-    print("File downloaded successfully")
-    readexcelfile(file_name.replace(".xlsx", ""))
-    gituploader(dati_utente)
-
-
-def gituploader(dati_utente):
-
-    #retriving the github instance by action token
-    g = Github(dati_utente.get("_Token"))
-
-    #g = Github("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")
-    repo_name = dati_utente.get("_AccountName") + ".github.io"
-
-    repo = g.get_user().get_repo(repo_name)
-
-    # Get the current directory path
-    current_path = os.getcwd()
-    # Go to the parent folder
-    parent_folder = os.path.abspath(os.path.join(current_path, ".."))
-    # Enter the _bibliography folder
-    bibliography_folder = os.path.join(parent_folder, "_bibliography")
-    # Check if the _bibliography folder exists
-    if os.path.exists(bibliography_folder) and os.path.isdir(bibliography_folder):
-        print("Entered the _bibliography folder.")
-    else:
-        print("The _bibliography folder does not exist.")
-        return -1
-
-    try:
-        file = repo.get_contents("_bibliography/papers.bib")
-        sha = file.sha
-        with open("C:\\Users\\fede\\Desktop\\dati-bibtex.bib", "r") as file_content:
-            file_content_str = file_content.read()
-            # Aggiorna il file con il nuovo contenuto
-            repo.update_file("_bibliography/papers.bib", "update", file_content_str, sha)
-
-        print("File file.bib aggiornato su GitHub.")
-    except Exception as e:
-        print(f"Errore nell'aggiornamento del file: {str(e)}")
-
-
 def startup():
     CONFIG = "excel_config.json"
 
@@ -176,10 +75,103 @@ def searchForUpdate(dati_utente):
     except Exception as e:
         print(f'Errore durante la richiesta dei metadati o il download del file: {str(e)}')
 
+def web_file_downloader(id, file_name, dati_utente):
+    link = f"https://drive.google.com/uc?export=download&id={id}"
+    try:
+        urllib.request.urlretrieve(link, os.path.join("edata", file_name))
+    except Exception as e:
+        print(e)
+        return False
+    print("File downloaded successfully")
+    readexcelfile(file_name.replace(".xlsx", ""))
+    gituploader(dati_utente)
+
+def readexcelfile(file_name):
+    # Leggi il file Excel con pandas
+    df = pd.read_excel(os.path.join("edata", f"{file_name}.xlsx"))
+    print(str(df))
+    # Rimuovi le colonne con nomi "unnamed"
+    df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
+
+    # Converti il DataFrame in formato JSON senza includere l'indice
+    json_data = df.to_json(orient="records", indent=4)
+
+    # Salva il JSON su un file
+    with open(os.path.join("edata", f"{file_name}.json"), "w") as json_data_file:
+        json_data_file.write(json_data)
+
+    print("Dati estratti e salvati in formato JSON senza campi 'unnamed'.")
+
+    # Leggi il JSON
+    with open(os.path.join("edata", f"{file_name}.json"), "r") as json_file:
+        data = json.load(json_file)
+
+    print("Dati letti dal file JSON.")
+
+    # Converti il JSON in formato BibTeX
+    bib_database = BibDatabase()
+    for entry in data:
+        bib_entry = {
+            'title': entry['title'],
+            'author': entry['author'],
+            'journal': entry['journal'],
+            'volume': str(entry['volume']),
+            'number': str(entry['number']),
+            'pages': str(entry['pages']),
+            'year': str(entry['year']) if not pd.isnull(entry['year']) else None,
+            'isivle': "true",
+            'ENTRYTYPE': 'article',
+            #'visibile': str(entry['Visibile']),
+            #'ENTRYTYPE': 'article',  # Imposta il tipo di voce BibTeX appropriato
+            'ID': str(random.randint(1, 1000)) # Imposta l'ID della voce BibTeX
+        }
+        bib_database.entries.append(bib_entry)
+
+    print("Dati convertiti in formato BibTeX.")
+
+    # Salva il file BibTeX
+    with open(os.path.join("edata", f"{file_name}.bib"), "w") as bibtex_file:
+        writer = BibTexWriter()
+        bibtex_file.write(writer.write(bib_database))
+
+    print("Dati convertiti e salvati in formato BibTeX.")
+
+    #TODO gestire l'upload dei file con il metodo gituploader
+
+def gituploader(dati_utente):
+
+    #retriving the github instance by action token
+    g = Github(dati_utente.get("_Token"))
+
+    #g = Github("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")
+    repo_name = dati_utente.get("_AccountName") + ".github.io"
+
+    repo = g.get_user().get_repo(repo_name)
+
+    # Get the current directory path
+    current_path = os.getcwd()
+    # Go to the parent folder
+    parent_folder = os.path.abspath(os.path.join(current_path, ".."))
+    # Enter the _bibliography folder
+    bibliography_folder = os.path.join(parent_folder, "_bibliography")
+    # Check if the _bibliography folder exists
+    if os.path.exists(bibliography_folder) and os.path.isdir(bibliography_folder):
+        print("Entered the _bibliography folder.")
+    else:
+        print("The _bibliography folder does not exist.")
+        return -1
+
+    try:
+        file = repo.get_contents("_bibliography/papers.bib")
+        sha = file.sha
+        with open(os.path.join("edata", "papers.bib"), "r") as file_content:
+            file_content_str = file_content.read()
+            # Aggiorna il file con il nuovo contenuto
+            repo.update_file("_bibliography/papers.bib", "automatic update", file_content_str, sha)
+
+        print("File file.bib aggiornato su GitHub.")
+    except Exception as e:
+        print(f"Errore nell'aggiornamento del file: {str(e)}")
 
 if __name__ == "__main__":
-    #web_file_downloader("https://drive.google.com/uc?export=download&id=1zPM9n-uXY-oPQWB-oKuz8A5srVEAb6VL", "C:\\Users\\fede\\Desktop\\file-di-prova.xlsx")
-    #readexcelfile("C:\\Users\\fede\\Desktop\\file-di-prova.xlsx")
     startup()
-    "https://docs.google.com/spreadsheets/d/17znBoG8Fge2EatZi8j6BFZIP_cbph5CP/edit?usp=drive_link&ouid=105879917516520212135&rtpof=true&sd=true"
-    #gituploader("fedemelis", "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")
