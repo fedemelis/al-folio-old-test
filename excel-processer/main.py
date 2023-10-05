@@ -1,5 +1,6 @@
 import os
 import random
+import string
 import urllib.request
 from datetime import datetime
 
@@ -33,6 +34,10 @@ def startup():
 
         with open(CONFIG, "w") as config_file:
             json.dump(dati_utente, config_file)
+
+        #crea la cartella edata
+        if not os.path.exists("edata"):
+            os.mkdir("edata")
 
     searchForUpdate(dati_utente)
 
@@ -113,14 +118,14 @@ def readexcelfile(file_name):
     for entry in data:
         bib_entry = {
             'title': entry['title'],
-            'author': entry['author'],
+            'author': entry['author'].replace(",", " and"),
             'journal': entry['journal'],
             'volume': str(entry['volume']),
             'number': str(entry['number']),
             'pages': str(entry['pages']),
             'year': str(entry['year']) if not pd.isnull(entry['year']) else None,
-            'isivle': "true",
-            'ENTRYTYPE': 'article',
+            'visibile': "true",
+            'ENTRYTYPE': entry['type'],
             #'visibile': str(entry['Visibile']),
             #'ENTRYTYPE': 'article',  # Imposta il tipo di voce BibTeX appropriato
             'ID': str(random.randint(1, 1000)) # Imposta l'ID della voce BibTeX
@@ -143,7 +148,6 @@ def gituploader(dati_utente):
     #retriving the github instance by action token
     g = Github(dati_utente.get("_Token"))
 
-    #g = Github("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")
     repo_name = dati_utente.get("_AccountName") + ".github.io"
 
     repo = g.get_user().get_repo(repo_name)
