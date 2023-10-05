@@ -115,6 +115,23 @@ def readexcelfile(file_name):
 
     # Converti il JSON in formato BibTeX
     bib_database = BibDatabase()
+
+    for entry in data:
+        lines = entry["Paper"].split('\n')
+        last_line = lines[-1]
+
+        # Aggiungo i campi dopo l'ultima riga
+        updated_entry = '\n'.join(lines[:-1]) + (
+                f",\n  abbr = {{{entry['Abbr']}}},\n  bibtex_show = {{{str(entry['BibTex show']).lower()}}},\n  selected = {{{str(entry['Selected']).lower()}}}" +
+                last_line
+        )
+
+        # Assegna l'entry BibTeX aggiornata
+        entry["Paper"] = updated_entry
+        bib_database.entries.append(bibtexparser.loads(entry["Paper"]).entries[0])
+
+
+    """
     for entry in data:
         bib_entry = {
             'title': entry['title'],
@@ -131,7 +148,7 @@ def readexcelfile(file_name):
             'ID': str(random.randint(1, 1000)) # Imposta l'ID della voce BibTeX
         }
         bib_database.entries.append(bib_entry)
-
+    """
     print("Dati convertiti in formato BibTeX.")
 
     # Salva il file BibTeX
