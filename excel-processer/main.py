@@ -130,25 +130,6 @@ def readexcelfile(file_name):
         entry["Paper"] = updated_entry
         bib_database.entries.append(bibtexparser.loads(entry["Paper"]).entries[0])
 
-
-    """
-    for entry in data:
-        bib_entry = {
-            'title': entry['title'],
-            'author': entry['author'].replace(",", " and"),
-            'journal': entry['journal'],
-            'volume': str(entry['volume']),
-            'number': str(entry['number']),
-            'pages': str(entry['pages']),
-            'year': str(entry['year']) if not pd.isnull(entry['year']) else None,
-            'visibile': "true",
-            'ENTRYTYPE': entry['type'],
-            #'visibile': str(entry['Visibile']),
-            #'ENTRYTYPE': 'article',  # Imposta il tipo di voce BibTeX appropriato
-            'ID': str(random.randint(1, 1000)) # Imposta l'ID della voce BibTeX
-        }
-        bib_database.entries.append(bib_entry)
-    """
     print("Dati convertiti in formato BibTeX.")
 
     # Salva il file BibTeX
