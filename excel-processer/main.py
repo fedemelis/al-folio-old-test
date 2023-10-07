@@ -1,6 +1,7 @@
 import os
 import random
 import string
+import time
 import urllib.request
 from datetime import datetime
 
@@ -10,7 +11,53 @@ import bibtexparser
 import requests
 from bibtexparser.bwriter import BibTexWriter
 from bibtexparser.bibdatabase import BibDatabase
-from github import Github
+from github import Github, GithubException
+
+
+def is_valid_github_username(username):
+    url = f"https://api.github.com/users/{username}"
+    response = requests.get(url)
+    return response.status_code == 200
+
+
+def is_valid_github_token(token, repository_name):
+    try:
+        g = Github(token)
+        repo = g.get_user().get_repo(repository_name)
+
+        # Prova a creare un file di test
+        try:
+            repo.create_file("test.txt", "Creating test file", "test content")
+        except GithubException as e:
+            if e.status == 422 and "sha" in str(e):
+                # Ignora l'errore "Invalid request. \"sha\" wasn't supplied."
+                pass
+            else:
+                raise
+
+        # Prova a rimuovere il file di test
+        try:
+            file = repo.get_contents("test.txt")
+            repo.delete_file(file.path, "Removing test file", file.sha)
+        except GithubException as e:
+            if e.status == 404:
+                # Il file non esiste, ma è stato comunque rimosso con successo
+                pass
+            else:
+                raise
+
+        return True
+    except Exception as e:
+        print(e)
+        return False
+
+def is_valid_bibliography_link(link):
+    try:
+        response = requests.get(link)
+        return response.status_code == 200
+    except Exception as e:
+        return False
+
 
 def startup():
     CONFIG = "excel_config.json"
@@ -19,12 +66,31 @@ def startup():
         with open(CONFIG, 'r') as config_file:
             dati_utente = json.load(config_file)
     else:
-        account_name = input("Inserisci il tuo nome utente di GitHub: ")
-        github_token = input("Inserisci il tuo token di GitHub: ")
-        api_key = input("Inserisci la tua Google API key: ")
-        link_bibliografia = input("Inserisci il link alla bibliografia: ")
-        #TODO: aggiungere campi da compilare
+        while True:
+            account_name = input("Inserisci il tuo nome utente di GitHub: ")
+            if is_valid_github_username(account_name):
+                break
+            else:
+                print("Nome utente di GitHub non valido. Riprova.")
 
+        while True:
+            github_token = input("Inserisci il tuo token di GitHub: ")
+            if is_valid_github_token(github_token, f"{account_name}.github.io"):
+                break
+            else:
+                print("Token di GitHub non valido. Riprova.")
+
+        while True:
+            api_key = input("Inserisci la tua Google API key: ")
+            # Aggiungi il controllo dell'API Key qui, se necessario
+            break
+
+        while True:
+            link_bibliografia = input("Inserisci il link alla bibliografia: ")
+            if is_valid_bibliography_link(link_bibliografia):
+                break
+            else:
+                print("Link della bibliografia non valido. Riprova.")
         dati_utente = {
             "_AccountName": account_name,
             "_Token": github_token,
@@ -35,7 +101,7 @@ def startup():
         with open(CONFIG, "w") as config_file:
             json.dump(dati_utente, config_file)
 
-        #crea la cartella edata
+        # crea la cartella edata
         if not os.path.exists("edata"):
             os.mkdir("edata")
 
@@ -44,8 +110,8 @@ def startup():
 
 def searchForUpdate(dati_utente):
     # Estrai l'ID del file dal link
-    #TODO modificarlo in modo che prenda sempre il campo dopo /d/
-    file_id = dati_utente.get("BibLink").split('/')[-1]
+    # TODO modificarlo in modo che prenda sempre il campo dopo /d/
+    file_id = dati_utente.get("BibLink").split('/d/')[-1].split('/')[0]
     api_key = dati_utente.get("_ApiKey")
 
     # URL per ottenere i metadati del file utilizzando la chiave API
@@ -59,7 +125,7 @@ def searchForUpdate(dati_utente):
             # Estrai l'ora dell'ultima modifica e il nome del file dai metadati
             data = response.json()
             ultima_modifica_drive = datetime.fromisoformat(data['modifiedTime'][:-1])
-            #prendo il nome del file dal json dei metadati
+            # prendo il nome del file dal json dei metadati
             nome_file = data['name']
 
             # Ottieni l'ora dell'ultima modifica del file locale, se esiste
@@ -80,6 +146,7 @@ def searchForUpdate(dati_utente):
     except Exception as e:
         print(f'Errore durante la richiesta dei metadati o il download del file: {str(e)}')
 
+
 def web_file_downloader(id, file_name, dati_utente):
     link = f"https://drive.google.com/uc?export=download&id={id}"
     try:
@@ -90,6 +157,7 @@ def web_file_downloader(id, file_name, dati_utente):
     print("File downloaded successfully")
     readexcelfile(file_name.replace(".xlsx", ""))
     gituploader(dati_utente)
+
 
 def readexcelfile(file_name):
     # Leggi il file Excel con pandas
@@ -139,11 +207,9 @@ def readexcelfile(file_name):
 
     print("Dati convertiti e salvati in formato BibTeX.")
 
-    #TODO gestire l'upload dei file con il metodo gituploader
 
 def gituploader(dati_utente):
-
-    #retriving the github instance by action token
+    # retriving the GitHub instance by action token
     g = Github(dati_utente.get("_Token"))
 
     repo_name = dati_utente.get("_AccountName") + ".github.io"
@@ -175,5 +241,9 @@ def gituploader(dati_utente):
     except Exception as e:
         print(f"Errore nell'aggiornamento del file: {str(e)}")
 
+
 if __name__ == "__main__":
-    startup()
+    while True:
+        print("Starting...")
+        startup()
+        time.sleep(60)
