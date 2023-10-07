@@ -14,12 +14,13 @@ from bibtexparser.bibdatabase import BibDatabase
 from github import Github, GithubException
 
 
+# Verifica l'esistenza di un nome utente GitHub
 def is_valid_github_username(username):
     url = f"https://api.github.com/users/{username}"
     response = requests.get(url)
     return response.status_code == 200
 
-
+# Verifica l'efficacia di un token GitHub
 def is_valid_github_token(token, repository_name):
     try:
         g = Github(token)
@@ -51,6 +52,8 @@ def is_valid_github_token(token, repository_name):
         print(e)
         return False
 
+
+# Testa la validità di un link alla bibliografia
 def is_valid_bibliography_link(link):
     try:
         response = requests.get(link)
@@ -59,6 +62,7 @@ def is_valid_bibliography_link(link):
         return False
 
 
+# Funzione di avvio, crea il file di configurazione con i dati inseriti dall'utente e lancia la ricerca di aggiornamenti
 def startup():
     CONFIG = "excel_config.json"
 
@@ -108,6 +112,7 @@ def startup():
     searchForUpdate(dati_utente)
 
 
+# Funzione che controlla se il file su Google Drive è stato modificato più recentemente di quello locale
 def searchForUpdate(dati_utente):
     # Estrai l'ID del file dal link
     # TODO modificarlo in modo che prenda sempre il campo dopo /d/
@@ -147,6 +152,7 @@ def searchForUpdate(dati_utente):
         print(f'Errore durante la richiesta dei metadati o il download del file: {str(e)}')
 
 
+# Funzione che scarica il file da Google Drive e lo salva nella cartella edata
 def web_file_downloader(id, file_name, dati_utente):
     link = f"https://drive.google.com/uc?export=download&id={id}"
     try:
@@ -159,6 +165,7 @@ def web_file_downloader(id, file_name, dati_utente):
     gituploader(dati_utente)
 
 
+# Funzione che legge il file Excel e lo converte in JSON e BibTeX
 def readexcelfile(file_name):
     # Leggi il file Excel con pandas
     df = pd.read_excel(os.path.join("edata", f"{file_name}.xlsx"))
@@ -208,6 +215,7 @@ def readexcelfile(file_name):
     print("Dati convertiti e salvati in formato BibTeX.")
 
 
+# Funzione che carica il file BibTeX su GitHub
 def gituploader(dati_utente):
     # retriving the GitHub instance by action token
     g = Github(dati_utente.get("_Token"))
@@ -243,6 +251,7 @@ def gituploader(dati_utente):
 
 
 if __name__ == "__main__":
+    #TODO aggiungere meccanismo start/stop con bottone
     while True:
         print("Starting...")
         startup()
