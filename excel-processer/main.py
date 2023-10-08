@@ -119,6 +119,9 @@ def searchForUpdate(dati_utente):
     file_id = dati_utente.get("BibLink").split('/d/')[-1].split('/')[0]
     api_key = dati_utente.get("_ApiKey")
 
+    if not os.path.exists("edata"):
+        os.mkdir("edata")
+
     # URL per ottenere i metadati del file utilizzando la chiave API
     metadata_url = f'https://www.googleapis.com/drive/v3/files/{file_id}?fields=name,modifiedTime&key={api_key}'
     print(metadata_url)
@@ -195,11 +198,15 @@ def readexcelfile(file_name):
         lines = entry["Paper"].split('\n')
         last_line = lines[-1]
 
-        # Aggiungo i campi dopo l'ultima riga
-        updated_entry = '\n'.join(lines[:-1]) + (
-                f",\n  abbr = {{{entry['Abbr']}}},\n  bibtex_show = {{{str(entry['BibTex show']).lower()}}},\n  selected = {{{str(entry['Selected']).lower()}}}" +
-                last_line
-        )
+        if entry["BibTex show"] == True:
+            updated_entry = '\n'.join(lines[:-1]) + (
+                    f",\n  abbr = {{{entry['Abbr']}}},\n  bibtex_show = {{{str(entry['BibTex show']).lower()}}},\n  selected = {{{str(entry['Selected']).lower()}}}" +
+                    last_line
+            )
+        else:
+            updated_entry = '\n'.join(lines[:-1]) + (
+                f",\n  abbr = {{{entry['Abbr']}}},\n  selected = {{{str(entry['Selected']).lower()}}}"
+            ) + last_line
 
         # Assegna l'entry BibTeX aggiornata
         entry["Paper"] = updated_entry
