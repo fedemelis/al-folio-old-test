@@ -20,6 +20,7 @@ def is_valid_github_username(username):
     response = requests.get(url)
     return response.status_code == 200
 
+
 # Verifica l'efficacia di un token GitHub
 def is_valid_github_token(token, repository_name):
     try:
@@ -64,7 +65,14 @@ def is_valid_bibliography_link(link):
 
 # Funzione di avvio, crea il file di configurazione con i dati inseriti dall'utente e lancia la ricerca di aggiornamenti
 def startup():
-    CONFIG = "excel_config.json"
+
+    if not os.path.exists(os.path.join("drive", "MyDrive", "excel-updater")):
+        os.mkdir(os.path.join("drive", "MyDrive", "excel-updater"))
+
+    if not os.path.exists(os.path.join("drive", "MyDrive", "excel-updater", "data")):
+        os.mkdir(os.path.join("drive", "MyDrive", "excel-updater", "data"))
+
+    CONFIG = os.path.join("drive", "MyDrive", "excel-updater", "data", "excel_config.json")
 
     if os.path.isfile(CONFIG) and os.access(CONFIG, os.R_OK) and os.path.exists(CONFIG):
         with open(CONFIG, 'r') as config_file:
@@ -105,22 +113,24 @@ def startup():
         with open(CONFIG, "w") as config_file:
             json.dump(dati_utente, config_file)
 
-        # crea la cartella edata
-        if not os.path.exists("edata"):
-            os.mkdir("edata")
+        edatapath = os.path.join("drive", "MyDrive", "excel-updater", "data", "edata")
 
-    searchForUpdate(dati_utente)
+        # crea la cartella edata
+        if not os.path.exists(edatapath):
+            os.mkdir(os.path.join(edatapath))
+
+    searchForUpdate(dati_utente, edatapath)
 
 
 # Funzione che controlla se il file su Google Drive è stato modificato più recentemente di quello locale
-def searchForUpdate(dati_utente):
+def searchForUpdate(dati_utente, edatapath):
     # Estrai l'ID del file dal link
     # TODO modificarlo in modo che prenda sempre il campo dopo /d/
     file_id = dati_utente.get("BibLink").split('/d/')[-1].split('/')[0]
     api_key = dati_utente.get("_ApiKey")
 
-    if not os.path.exists("edata"):
-        os.mkdir("edata")
+    if not os.path.exists(edatapath):
+        os.mkdir(edatapath)
 
     # URL per ottenere i metadati del file utilizzando la chiave API
     metadata_url = f'https://www.googleapis.com/drive/v3/files/{file_id}?fields=name,modifiedTime&key={api_key}'
@@ -137,7 +147,7 @@ def searchForUpdate(dati_utente):
             nome_file = data['name']
 
             # Ottieni l'ora dell'ultima modifica del file locale, se esiste
-            percorso_file_locale = os.path.join("edata", nome_file)
+            percorso_file_locale = os.path.join(edatapath, nome_file)
             ultima_modifica_locale = None
 
             if os.path.exists(percorso_file_locale):
@@ -146,7 +156,7 @@ def searchForUpdate(dati_utente):
             # Confronta le date di modifica
             if ultima_modifica_locale is None or ultima_modifica_drive > ultima_modifica_locale:
                 # Scarica il file solo se il file su Google Drive è stato modificato più recentemente
-                web_file_downloader(file_id, nome_file, dati_utente)
+                web_file_downloader(file_id, nome_file, dati_utente, edatapath)
             else:
                 print(f'Il file locale è già aggiornato.')
         else:
@@ -156,22 +166,22 @@ def searchForUpdate(dati_utente):
 
 
 # Funzione che scarica il file da Google Drive e lo salva nella cartella edata
-def web_file_downloader(id, file_name, dati_utente):
+def web_file_downloader(id, file_name, dati_utente, edatapath):
     link = f"https://drive.google.com/uc?export=download&id={id}"
     try:
-        urllib.request.urlretrieve(link, os.path.join("edata", file_name))
+        urllib.request.urlretrieve(link, os.path.join(edatapath, file_name))
     except Exception as e:
         print(e)
         return False
     print("File downloaded successfully")
-    readexcelfile(file_name.replace(".xlsx", ""))
-    gituploader(dati_utente)
+    readexcelfile(file_name.replace(".xlsx", ""), edatapath)
+    gituploader(dati_utente, edatapath)
 
 
 # Funzione che legge il file Excel e lo converte in JSON e BibTeX
-def readexcelfile(file_name):
+def readexcelfile(file_name, edatapath):
     # Leggi il file Excel con pandas
-    df = pd.read_excel(os.path.join("edata", f"{file_name}.xlsx"))
+    df = pd.read_excel(os.path.join(edatapath, f"{file_name}.xlsx"))
     print(str(df))
     # Rimuovi le colonne con nomi "unnamed"
     df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
@@ -180,13 +190,13 @@ def readexcelfile(file_name):
     json_data = df.to_json(orient="records", indent=4)
 
     # Salva il JSON su un file
-    with open(os.path.join("edata", f"{file_name}.json"), "w") as json_data_file:
+    with open(os.path.join(edatapath, f"{file_name}.json"), "w") as json_data_file:
         json_data_file.write(json_data)
 
     print("Dati estratti e salvati in formato JSON senza campi 'unnamed'.")
 
     # Leggi il JSON
-    with open(os.path.join("edata", f"{file_name}.json"), "r") as json_file:
+    with open(os.path.join(edatapath, f"{file_name}.json"), "r") as json_file:
         data = json.load(json_file)
 
     print("Dati letti dal file JSON.")
@@ -215,7 +225,7 @@ def readexcelfile(file_name):
     print("Dati convertiti in formato BibTeX.")
 
     # Salva il file BibTeX
-    with open(os.path.join("edata", f"{file_name}.bib"), "w") as bibtex_file:
+    with open(os.path.join(edatapath, f"{file_name}.bib"), "w") as bibtex_file:
         writer = BibTexWriter()
         bibtex_file.write(writer.write(bib_database))
 
@@ -223,7 +233,7 @@ def readexcelfile(file_name):
 
 
 # Funzione che carica il file BibTeX su GitHub
-def gituploader(dati_utente):
+def gituploader(dati_utente, edatapath):
     # retriving the GitHub instance by action token
     g = Github(dati_utente.get("_Token"))
 
@@ -241,12 +251,12 @@ def gituploader(dati_utente):
     if os.path.exists(bibliography_folder) and os.path.isdir(bibliography_folder):
         print("Entered the _bibliography folder.")
     else:
-       os.mkdir(bibliography_folder)
+        os.mkdir(bibliography_folder)
 
     try:
         file = repo.get_contents("_bibliography/papers.bib")
         sha = file.sha
-        with open(os.path.join("edata", "papers.bib"), "r") as file_content:
+        with open(os.path.join(edatapath, "papers.bib"), "r") as file_content:
             file_content_str = file_content.read()
             # Aggiorna il file con il nuovo contenuto
             repo.update_file("_bibliography/papers.bib", "automatic update", file_content_str, sha)
@@ -257,8 +267,9 @@ def gituploader(dati_utente):
 
 
 if __name__ == "__main__":
-    #TODO aggiungere meccanismo start/stop con bottone
+    # TODO aggiungere meccanismo start/stop con bottone
     while True:
         print("Starting...")
         startup()
         time.sleep(360)
+
