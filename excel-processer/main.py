@@ -176,8 +176,8 @@ def searchForUpdate(dati_utente, edatapath):
 
                 # Confronta le date di modifica
                 if ultima_modifica_locale is None or ultima_modifica_drive > ultima_modifica_locale:
-                     # Scarica il file solo se il file su Google Drive è stato modificato più recentemente
-                     web_file_downloader(file_id, nome_file, dati_utente, edatapath)
+                    # Scarica il file solo se il file su Google Drive è stato modificato più recentemente
+                    web_file_downloader(file_id, nome_file, dati_utente, edatapath)
                 else:
                     print(f'Il file locale è già aggiornato.')
             else:
@@ -195,10 +195,8 @@ def web_file_downloader(id, file_name, dati_utente, edatapath):
         print(e)
         return False
     print("File downloaded successfully")
-    #se il file è la bibliografia
-    if str(file_name).find("papers"):
-        readexcelfile(file_name.replace(".xlsx", ""), edatapath)
-        gituploader(dati_utente, edatapath)
+    readexcelfile(file_name.replace(".xlsx", ""), edatapath)
+    gituploader(dati_utente, edatapath)
 
 
 # Funzione che legge il file Excel e lo converte in JSON e BibTeX
