@@ -10,4 +10,4 @@ Gemfile.lock
 vendor
 excel-processer/excel_config.json
 edata
-
+data/excel_config.json
