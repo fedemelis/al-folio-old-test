@@ -45,9 +45,8 @@ def readexcelfile(file_name, edatapath):
 
     print("Dati convertiti in formato BibTeX.")
 
-    with open("static_papers_tag", "r") as static_papers_tag_file:
+    with open("static_papers_tag.bib", "r") as static_papers_tag_file:
         static_papers_tag = static_papers_tag_file.read()
-        static_papers_tag += "\n\n"
 
     # Salva il file BibTeX
     with open(os.path.join(edatapath, f"{file_name}.bib"), "w") as bibtex_file:
