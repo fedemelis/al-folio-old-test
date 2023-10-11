@@ -3,6 +3,7 @@ import random
 import string
 import time
 import urllib.request
+import threading
 from datetime import datetime
 
 import pandas as pd
@@ -12,6 +13,16 @@ import requests
 from bibtexparser.bwriter import BibTexWriter
 from bibtexparser.bibdatabase import BibDatabase
 from github import Github, GithubException
+from thesis import *
+from bibliography import *
+
+
+def user_input_thread():
+    global should_exit
+    user_input = input("Digita \"si\" per uscire: ")
+    if user_input == "si" or user_input == "Si" or user_input == "SI" or user_input == "yes" or user_input == "Yes" or user_input == "YES":
+        should_exit = True
+        print("Quitting...")
 
 
 # Verifica l'esistenza di un nome utente GitHub
@@ -19,6 +30,7 @@ def is_valid_github_username(username):
     url = f"https://api.github.com/users/{username}"
     response = requests.get(url)
     return response.status_code == 200
+
 
 # Verifica l'efficacia di un token GitHub
 def is_valid_github_token(token, repository_name):
@@ -54,7 +66,7 @@ def is_valid_github_token(token, repository_name):
 
 
 # Testa la validità di un link alla bibliografia
-def is_valid_bibliography_link(link):
+def is_valid_drive_link(link):
     try:
         response = requests.get(link)
         return response.status_code == 200
@@ -64,7 +76,16 @@ def is_valid_bibliography_link(link):
 
 # Funzione di avvio, crea il file di configurazione con i dati inseriti dall'utente e lancia la ricerca di aggiornamenti
 def startup():
-    CONFIG = "excel_config.json"
+    # Se si utilizza Google Colab, rimuovere il commento dalla riga seguente
+    # drive.mount('/content/drive')
+
+    if not os.path.exists(os.path.join("drive", "MyDrive", "excel-updater")):
+        os.mkdir(os.path.join("drive", "MyDrive", "excel-updater"))
+
+    if not os.path.exists(os.path.join("drive", "MyDrive", "excel-updater", "data")):
+        os.mkdir(os.path.join("drive", "MyDrive", "excel-updater", "data"))
+
+    CONFIG = os.path.join("drive", "MyDrive", "excel-updater", "data", "excel_config.json")
 
     if os.path.isfile(CONFIG) and os.access(CONFIG, os.R_OK) and os.path.exists(CONFIG):
         with open(CONFIG, 'r') as config_file:
@@ -91,174 +112,114 @@ def startup():
 
         while True:
             link_bibliografia = input("Inserisci il link alla bibliografia: ")
-            if is_valid_bibliography_link(link_bibliografia):
+            if is_valid_drive_link(link_bibliografia):
                 break
             else:
-                print("Link della bibliografia non valido. Riprova.")
+                print("Link alla bibliografia non valido. Riprova.")
+
+        while True:
+            link_tesi = input("Inserisci il link alle tesi: ")
+            if is_valid_drive_link(link_tesi):
+                break
+            else:
+                print("Link alle tesi non valido. Riprova.")
         dati_utente = {
             "_AccountName": account_name,
             "_Token": github_token,
             "_ApiKey": api_key,
-            "BibLink": link_bibliografia
+            "BibLink": link_bibliografia,
+            "ThesisLink": link_tesi
         }
 
         with open(CONFIG, "w") as config_file:
             json.dump(dati_utente, config_file)
 
-        # crea la cartella edata
-        if not os.path.exists("edata"):
-            os.mkdir("edata")
+    edatapath = os.path.join("drive", "MyDrive", "excel-updater", "data", "edata")
+    # crea la cartella edata
+    if not os.path.exists(edatapath):
+        os.mkdir(os.path.join(edatapath))
 
-    searchForUpdate(dati_utente)
+    searchForUpdate(dati_utente, edatapath)
 
 
 # Funzione che controlla se il file su Google Drive è stato modificato più recentemente di quello locale
-def searchForUpdate(dati_utente):
+def searchForUpdate(dati_utente, edatapath):
     # Estrai l'ID del file dal link
     # TODO modificarlo in modo che prenda sempre il campo dopo /d/
-    file_id = dati_utente.get("BibLink").split('/d/')[-1].split('/')[0]
+    file_id_bib = dati_utente.get("BibLink").split('/d/')[-1].split('/')[0]
+    file_id_thesis = dati_utente.get("ThesisLink").split('/d/')[-1].split('/')[0]
     api_key = dati_utente.get("_ApiKey")
+    link = [file_id_bib, file_id_thesis]
+    if not os.path.exists(edatapath):
+        os.mkdir(edatapath)
+    for file_id in link:
+        # URL per ottenere i metadati del file utilizzando la chiave API
+        metadata_url = f'https://www.googleapis.com/drive/v3/files/{file_id}?fields=name,modifiedTime&key={api_key}'
+        print(metadata_url)
+        try:
+            # Effettua una richiesta GET ai metadati del file
+            response = requests.get(metadata_url)
 
-    if not os.path.exists("edata"):
-        os.mkdir("edata")
+            if response.status_code == 200:
+                # Estrai l'ora dell'ultima modifica e il nome del file dai metadati
+                data = response.json()
+                ultima_modifica_drive = datetime.fromisoformat(data['modifiedTime'][:-1])
+                # prendo il nome del file dal json dei metadati
+                nome_file = data['name']
 
-    # URL per ottenere i metadati del file utilizzando la chiave API
-    metadata_url = f'https://www.googleapis.com/drive/v3/files/{file_id}?fields=name,modifiedTime&key={api_key}'
-    print(metadata_url)
-    try:
-        # Effettua una richiesta GET ai metadati del file
-        response = requests.get(metadata_url)
+                # Ottieni l'ora dell'ultima modifica del file locale, se esiste
+                percorso_file_locale = os.path.join(edatapath, nome_file)
+                ultima_modifica_locale = None
 
-        if response.status_code == 200:
-            # Estrai l'ora dell'ultima modifica e il nome del file dai metadati
-            data = response.json()
-            ultima_modifica_drive = datetime.fromisoformat(data['modifiedTime'][:-1])
-            # prendo il nome del file dal json dei metadati
-            nome_file = data['name']
+                if os.path.exists(percorso_file_locale):
+                    ultima_modifica_locale = datetime.utcfromtimestamp(os.path.getmtime(percorso_file_locale))
 
-            # Ottieni l'ora dell'ultima modifica del file locale, se esiste
-            percorso_file_locale = os.path.join("edata", nome_file)
-            ultima_modifica_locale = None
-
-            if os.path.exists(percorso_file_locale):
-                ultima_modifica_locale = datetime.utcfromtimestamp(os.path.getmtime(percorso_file_locale))
-
-            # Confronta le date di modifica
-            if ultima_modifica_locale is None or ultima_modifica_drive > ultima_modifica_locale:
-                # Scarica il file solo se il file su Google Drive è stato modificato più recentemente
-                web_file_downloader(file_id, nome_file, dati_utente)
+                # Confronta le date di modifica
+                if ultima_modifica_locale is None or ultima_modifica_drive > ultima_modifica_locale:
+                     # Scarica il file solo se il file su Google Drive è stato modificato più recentemente
+                    web_file_downloader(file_id, nome_file, dati_utente, edatapath)
+                else:
+                    print(f'Il file locale è già aggiornato.')
             else:
-                print(f'Il file locale è già aggiornato.')
-        else:
-            print(f'Errore nella richiesta dei metadati. Codice di stato: {response.status_code}')
-    except Exception as e:
-        print(f'Errore durante la richiesta dei metadati o il download del file: {str(e)}')
+                print(f'Errore nella richiesta dei metadati. Codice di stato: {response.status_code}')
+        except Exception as e:
+            print(f'Errore durante la richiesta dei metadati o il download del file: {str(e)}')
 
 
 # Funzione che scarica il file da Google Drive e lo salva nella cartella edata
-def web_file_downloader(id, file_name, dati_utente):
+def web_file_downloader(id, file_name, dati_utente, edatapath):
     link = f"https://drive.google.com/uc?export=download&id={id}"
     try:
-        urllib.request.urlretrieve(link, os.path.join("edata", file_name))
+        urllib.request.urlretrieve(link, os.path.join(edatapath, file_name))
     except Exception as e:
         print(e)
         return False
     print("File downloaded successfully")
-    readexcelfile(file_name.replace(".xlsx", ""))
-    gituploader(dati_utente)
+    readexcelfile(file_name.replace(".xlsx", ""), edatapath)
+    gituploader(dati_utente, edatapath)
 
 
 # Funzione che legge il file Excel e lo converte in JSON e BibTeX
-def readexcelfile(file_name):
-    # Leggi il file Excel con pandas
-    df = pd.read_excel(os.path.join("edata", f"{file_name}.xlsx"))
-    print(str(df))
-    # Rimuovi le colonne con nomi "unnamed"
-    df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
-
-    # Converti il DataFrame in formato JSON senza includere l'indice
-    json_data = df.to_json(orient="records", indent=4)
-
-    # Salva il JSON su un file
-    with open(os.path.join("edata", f"{file_name}.json"), "w") as json_data_file:
-        json_data_file.write(json_data)
-
-    print("Dati estratti e salvati in formato JSON senza campi 'unnamed'.")
-
-    # Leggi il JSON
-    with open(os.path.join("edata", f"{file_name}.json"), "r") as json_file:
-        data = json.load(json_file)
-
-    print("Dati letti dal file JSON.")
-
-    # Converti il JSON in formato BibTeX
-    bib_database = BibDatabase()
-
-    for entry in data:
-        lines = entry["Paper"].split('\n')
-        last_line = lines[-1]
-
-        if entry["BibTex show"] == True:
-            updated_entry = '\n'.join(lines[:-1]) + (
-                    f",\n  abbr = {{{entry['Abbr']}}},\n  bibtex_show = {{{str(entry['BibTex show']).lower()}}},\n  selected = {{{str(entry['Selected']).lower()}}}" +
-                    last_line
-            )
-        else:
-            updated_entry = '\n'.join(lines[:-1]) + (
-                f",\n  abbr = {{{entry['Abbr']}}},\n  selected = {{{str(entry['Selected']).lower()}}}"
-            ) + last_line
-
-        # Assegna l'entry BibTeX aggiornata
-        entry["Paper"] = updated_entry
-        bib_database.entries.append(bibtexparser.loads(entry["Paper"]).entries[0])
-
-    print("Dati convertiti in formato BibTeX.")
-
-    # Salva il file BibTeX
-    with open(os.path.join("edata", f"{file_name}.bib"), "w") as bibtex_file:
-        writer = BibTexWriter()
-        bibtex_file.write(writer.write(bib_database))
-
-    print("Dati convertiti e salvati in formato BibTeX.")
-
-
-# Funzione che carica il file BibTeX su GitHub
-def gituploader(dati_utente):
-    # retriving the GitHub instance by action token
-    g = Github(dati_utente.get("_Token"))
-
-    repo_name = dati_utente.get("_AccountName") + ".github.io"
-
-    repo = g.get_user().get_repo(repo_name)
-
-    # Get the current directory path
-    current_path = os.getcwd()
-    # Go to the parent folder
-    parent_folder = os.path.abspath(os.path.join(current_path, ".."))
-    # Enter the _bibliography folder
-    bibliography_folder = os.path.join(parent_folder, "_bibliography")
-    # Check if the _bibliography folder exists
-    if os.path.exists(bibliography_folder) and os.path.isdir(bibliography_folder):
-        print("Entered the _bibliography folder.")
-    else:
-       os.mkdir(bibliography_folder)
-
-    try:
-        file = repo.get_contents("_bibliography/papers.bib")
-        sha = file.sha
-        with open(os.path.join("edata", "papers.bib"), "r") as file_content:
-            file_content_str = file_content.read()
-            # Aggiorna il file con il nuovo contenuto
-            repo.update_file("_bibliography/papers.bib", "automatic update", file_content_str, sha)
-
-        print("File file.bib aggiornato su GitHub.")
-    except Exception as e:
-        print(f"Errore nell'aggiornamento del file: {str(e)}")
 
 
 if __name__ == "__main__":
-    #TODO aggiungere meccanismo start/stop con bottone
-    while True:
-        print("Starting...")
-        startup()
-        time.sleep(360)
+    # drive.mount('/content/drive')
+    input_thread = threading.Thread(target=user_input_thread)
+    should_exit = False
+    first_exec = True
+    while not should_exit:
+        if first_exec:
+            print("Starting...")
+            startup()
+            first_exec = False
+            input_thread.start()
+        else:
+            time.sleep(20)
+            if should_exit == True:
+                break
+            else:
+                # chiudi il thread
+                startup()
+    print("Exited.")
+
+    input_thread.join()
