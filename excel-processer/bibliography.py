@@ -1,6 +1,6 @@
 from main import *
 
-def readexcelfile(file_name, edatapath):
+def papersManipulation(file_name, edatapath):
     # Leggi il file Excel con pandas
     df = pd.read_excel(os.path.join(edatapath, f"{file_name}.xlsx"))
     print(str(df))
@@ -45,7 +45,7 @@ def readexcelfile(file_name, edatapath):
 
     print("Dati convertiti in formato BibTeX.")
 
-    with open("static_papers_tag.bib", "r") as static_papers_tag_file:
+    with open(os.path.join("drive", "MyDrive", "excel-updater", "data", "static_papers_tag.bib"), "r") as static_papers_tag_file:
         static_papers_tag = static_papers_tag_file.read()
 
     # Salva il file BibTeX

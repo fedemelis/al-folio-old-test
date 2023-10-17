@@ -85,6 +85,24 @@ def startup():
     if not os.path.exists(os.path.join("drive", "MyDrive", "excel-updater", "data")):
         os.mkdir(os.path.join("drive", "MyDrive", "excel-updater", "data"))
 
+    if not os.path.exists(os.path.join("drive", "MyDrive", "excel-updater", "data", "static_papers_tag.bib")):
+        with open(os.path.join("drive", "MyDrive", "excel-updater", "data", "static_papers_tag.bib"), "w") as static_papers_tag_file:
+            static_papers_tag_file.write(""
+                                         "---\n"
+                                         "---\n"
+                                         "@string{PVLDB = {Proceedings of VLDB Endowment,}}\n"
+                                         "@string{SAC = {Symposium on Applied Computing,}}\n"
+                                         "@string{SEBD = {Proceedings of Italian Symposium on Advanced Database Systems,}}\n"
+                                         "@string{CIKM = {Proceedings of International Conference on Information and Knowledge Management,}}\n"
+                                         "@string{EDBT = {Proceedings of International Conference on Extending Database Technology,}}\n"
+                                         "@string{SIGMOD = {Proceedings of International Conference on Management of Data (SIGMOD),}}\n"
+                                         "@string{Inf.Syst. = {Information Systems,}}\n"
+                                         "@string{iiWAS = {Proceedings of International Conference on Information Integration and Web-based Applications (iiWAS),}}\n"
+                                         "@string{TKDE = {IEEE Transaction on Knowledge and Data Engineering (TKDE),}}\n")
+
+
+
+
     CONFIG = os.path.join("drive", "MyDrive", "excel-updater", "data", "excel_config.json")
 
     if os.path.isfile(CONFIG) and os.access(CONFIG, os.R_OK) and os.path.exists(CONFIG):
@@ -195,8 +213,12 @@ def web_file_downloader(id, file_name, dati_utente, edatapath):
         print(e)
         return False
     print("File downloaded successfully")
-    readexcelfile(file_name.replace(".xlsx", ""), edatapath)
-    gituploader(dati_utente, edatapath)
+    if file_name.endswith("papers.xlsx"):
+        papersManipulation(file_name.replace(".xlsx", ""), edatapath)
+        gituploader(dati_utente, edatapath)
+    else:
+        thesisManipulation(file_name.replace(".xlsx", ""), edatapath)
+        #gituploader(dati_utente, edatapath)
 
 
 # Funzione che legge il file Excel e lo converte in JSON e BibTeX
