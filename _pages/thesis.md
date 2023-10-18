@@ -1,6 +1,6 @@
 ---
 layout: page
-permalink: / thesis /
+permalink: /thesis/
 title: Students
 description: List of students I have tutored.
 nav: false
