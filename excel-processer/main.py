@@ -215,10 +215,10 @@ def web_file_downloader(id, file_name, dati_utente, edatapath):
     print("File downloaded successfully")
     if file_name.endswith("papers.xlsx"):
         papersManipulation(file_name.replace(".xlsx", ""), edatapath)
-        gituploader(dati_utente, edatapath)
+        gitPapersUploader(dati_utente, edatapath)
     else:
         thesisManipulation(file_name.replace(".xlsx", ""), edatapath)
-        #gituploader(dati_utente, edatapath)
+        gitThesisUploader(dati_utente, edatapath)
 
 
 # Funzione che legge il file Excel e lo converte in JSON e BibTeX

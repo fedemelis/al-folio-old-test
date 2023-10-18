@@ -58,7 +58,7 @@ def papersManipulation(file_name, edatapath):
 
 
 # Funzione che carica il file BibTeX su GitHub
-def gituploader(dati_utente, edatapath):
+def gitPapersUploader(dati_utente, edatapath):
     # retriving the GitHub instance by action token
     g = Github(dati_utente.get("_Token"))
 
@@ -66,26 +66,14 @@ def gituploader(dati_utente, edatapath):
 
     repo = g.get_user().get_repo(repo_name)
 
-    # Get the current directory path
-    current_path = os.getcwd()
-    # Go to the parent folder
-    parent_folder = os.path.abspath(os.path.join(current_path, ".."))
-    # Enter the _bibliography folder
-    bibliography_folder = os.path.join(parent_folder, "_bibliography")
-    # Check if the _bibliography folder exists
-    if os.path.exists(bibliography_folder) and os.path.isdir(bibliography_folder):
-        print("Entered the _bibliography folder.")
-    else:
-        os.mkdir(bibliography_folder)
-
     try:
         file = repo.get_contents("_bibliography/papers.bib")
         sha = file.sha
         with open(os.path.join(edatapath, "papers.bib"), "r") as file_content:
             file_content_str = file_content.read()
             # Aggiorna il file con il nuovo contenuto
-            repo.update_file("_bibliography/papers.bib", "automatic update", file_content_str, sha)
+            repo.update_file("_bibliography/papers.bib", "automatic papers update", file_content_str, sha)
 
-        print("File file.bib aggiornato su GitHub.")
+        print("File dei papers aggiornato su GitHub.")
     except Exception as e:
         print(f"Errore nell'aggiornamento del file: {str(e)}")
