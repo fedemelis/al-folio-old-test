@@ -20,7 +20,7 @@ def thesisManipulation(file_name, edatapath):
     with open(temp_json_file, "w") as json_data_file:
         json_data_file.write(json_data)
 
-    print("Dati estratti e salvati in formato JSON senza campi 'unnamed'.")
+    print("Dati estratti e salvati in formato JSON.")
 
     # Leggi il JSON
     with open(temp_json_file, "r") as json_file:
@@ -100,8 +100,6 @@ def thesisManipulation(file_name, edatapath):
         elif is_type(tipologia, "Bechelor"):
             bachelorCount += 1
             markdownText += f"{bachelorCount}.  {nome} {cognome}: {titolo}, a.a. ({anno})\n"
-
-    print(markdownText)
 
     mdThesis = os.path.join(edatapath, f"{file_name}.md")
     with open(mdThesis, "w") as markdownTheis:
