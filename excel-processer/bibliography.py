@@ -3,7 +3,8 @@ from main import *
 def papersManipulation(file_name, edatapath):
     # Leggi il file Excel con pandas
     df = pd.read_excel(os.path.join(edatapath, f"{file_name}.xlsx"))
-    print(str(df))
+    print("Contenuto del file Excel letto con successo")
+    #print(str(df))
     # Rimuovi le colonne con nomi "unnamed"
     df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
 
@@ -14,7 +15,7 @@ def papersManipulation(file_name, edatapath):
     with open(os.path.join(edatapath, f"{file_name}.json"), "w") as json_data_file:
         json_data_file.write(json_data)
 
-    print("Dati estratti e salvati in formato JSON senza campi 'unnamed'.")
+    print("Dati estratti e salvati in formato JSON")
 
     # Leggi il JSON
     with open(os.path.join(edatapath, f"{file_name}.json"), "r") as json_file:
@@ -30,18 +31,32 @@ def papersManipulation(file_name, edatapath):
         last_line = lines[-1]
 
         if entry["BibTex show"] == True:
-            updated_entry = '\n'.join(lines[:-1]) + (
-                    f",\n  abbr = {{{entry['Abbr']}}},\n  bibtex_show = {{{str(entry['BibTex show']).lower()}}},\n  selected = {{{str(entry['Selected']).lower()}}}" +
-                    last_line
-            )
+            if entry["HTML"] is not None:
+                updated_entry = '\n'.join(lines[:-1]) + (
+                        f",\n  abbr = {{{entry['Abbr']}}},\n  bibtex_show = {{{str(entry['BibTex show']).lower()}}},\n  selected = {{{str(entry['Selected']).lower()}}},\n  html = {{{str(entry['HTML']).lower()}}}\n" +
+                        last_line
+                )
+            else:
+                updated_entry = '\n'.join(lines[:-1]) + (
+                        f",\n  abbr = {{{entry['Abbr']}}},\n  bibtex_show = {{{str(entry['BibTex show']).lower()}}},\n  selected = {{{str(entry['Selected']).lower()}}}\n" +
+                        last_line
+                )
         else:
-            updated_entry = '\n'.join(lines[:-1]) + (
-                f",\n  abbr = {{{entry['Abbr']}}},\n  selected = {{{str(entry['Selected']).lower()}}}"
-            ) + last_line
+            if entry["HTML"] is not None:
+                updated_entry = '\n'.join(lines[:-1]) + (
+                        f",\n  abbr = {{{entry['Abbr']}}},\n  selected = {{{str(entry['Selected']).lower()}}},\n  html = {{{str(entry['HTML']).lower()}}}\n" +
+                        last_line
+                )
+            else:
+                updated_entry = '\n'.join(lines[:-1]) + (
+                        f",\n  abbr = {{{entry['Abbr']}}},\n  selected = {{{str(entry['Selected']).lower()}}}\n" +
+                        last_line
+                )
 
         # Assegna l'entry BibTeX aggiornata
         entry["Paper"] = updated_entry
         bib_database.entries.append(bibtexparser.loads(entry["Paper"]).entries[0])
+        print("DEBUG: fatto zio pesca")
 
     print("Dati convertiti in formato BibTeX.")
 
@@ -54,7 +69,7 @@ def papersManipulation(file_name, edatapath):
         bibtex_file.write(static_papers_tag)
         bibtex_file.write(writer.write(bib_database))
 
-    print("Dati convertiti e salvati in formato BibTeX.")
+    print("Dati salvati in formato BibTeX.")
 
 
 # Funzione che carica il file BibTeX su GitHub
