@@ -65,7 +65,7 @@ def is_valid_github_token(token, repository_name):
         return False
 
 
-# Testa la validità di un link alla bibliografia
+# Testa la validità di un link drive
 def is_valid_drive_link(link):
     try:
         response = requests.get(link)
@@ -207,7 +207,7 @@ def searchForUpdate(dati_utente, edatapath):
             else:
                 print(f'Errore nella richiesta dei metadati. Codice di stato: {response.status_code}')
         except Exception as e:
-            print(f'Errore durante la richiesta dei metadati o il download del file: {str(e)}')
+            print(f'Controlla di essere connesso ad internet, oppure errore di parsing: {str(e)}')
 
 
 # Funzione che scarica il file da Google Drive e lo salva nella cartella edata
