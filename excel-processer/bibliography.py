@@ -3,7 +3,7 @@ from main import *
 def papersManipulation(file_name, edatapath):
     # Leggi il file Excel con pandas
     df = pd.read_excel(os.path.join(edatapath, f"{file_name}.xlsx"))
-    print(str(df))
+    # print(str(df))
     # Rimuovi le colonne con nomi "unnamed"
     df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
 
@@ -14,7 +14,7 @@ def papersManipulation(file_name, edatapath):
     with open(os.path.join(edatapath, f"{file_name}.json"), "w") as json_data_file:
         json_data_file.write(json_data)
 
-    print("Dati estratti e salvati in formato JSON senza campi 'unnamed'.")
+    print("Dati estratti e salvati in formato JSON.")
 
     # Leggi il JSON
     with open(os.path.join(edatapath, f"{file_name}.json"), "r") as json_file:

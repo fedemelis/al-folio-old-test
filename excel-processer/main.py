@@ -79,6 +79,12 @@ def startup():
     # Se si utilizza Google Colab, rimuovere il commento dalla riga seguente
     # drive.mount('/content/drive')
 
+    if not os.path.exists("drive"):
+        os.mkdir("drive")
+
+    if not os.path.exists(os.path.join("drive", "MyDrive")):
+        os.mkdir(os.path.join("drive", "MyDrive"))
+
     if not os.path.exists(os.path.join("drive", "MyDrive", "excel-updater")):
         os.mkdir(os.path.join("drive", "MyDrive", "excel-updater"))
 

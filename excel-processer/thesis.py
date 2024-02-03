@@ -8,7 +8,7 @@ def is_type(entry_type, target_type):
 
 def thesisManipulation(file_name, edatapath):
     df = pd.read_excel(os.path.join(edatapath, f"{file_name}.xlsx"))
-    print(str(df))
+    # print(str(df))
     # Rimuovi le colonne con nomi "unnamed"
     df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
 
@@ -101,7 +101,7 @@ def thesisManipulation(file_name, edatapath):
             bachelorCount += 1
             markdownText += f"{bachelorCount}.  {nome} {cognome}: {titolo}, a.a. ({anno})\n"
 
-    print(markdownText)
+    # print(markdownText)
 
     mdThesis = os.path.join(edatapath, f"{file_name}.md")
     with open(mdThesis, "w") as markdownTheis:
