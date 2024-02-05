@@ -9,6 +9,7 @@ nav_order: 5
 
 ## Advisor of PhD student (Doctorate Course in ICT)
 
+- MATTEO PAGANELLI (XXXVII Ciclo)
 - FEDERICO MAZZARRI (XXXVIII Ciclo)
 
 ## Advisor in Master Thesis (Dipartimento di Ingegneria "Enzo Ferrari")
@@ -21,7 +22,6 @@ nav_order: 5
 
 2017-2018
 - ZAVARONI ANDREA: Keyword Search su database relazionali attraverso tecniche di Information Retrieval, (2017-2018)
-- PAGANELLI MATTEO: Studio di algoritmi per il calcolo parallelo di full disjunction, (2017-2018)
 
 ## Advisor in Bachelor Thesis (Dipartimento di Ingegneria "Enzo Ferrari")
 
