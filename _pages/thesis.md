@@ -9,7 +9,7 @@ nav_order: 5
 
 ## Advisor of PhD student (Doctorate Course in ICT)
 
-- FEDERICA MAZZARRI (XXXVIII Ciclo)
+- FEDERICO MAZZARRI (XXXVIII Ciclo)
 
 ## Advisor in Master Thesis (Dipartimento di Ingegneria "Enzo Ferrari")
 
