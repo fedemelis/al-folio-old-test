@@ -20,6 +20,9 @@ nav_order: 5
 ## Advisor in Master Thesis (Dipartimento di Ingegneria "Enzo Ferrari")
 
 
+1435708800000
+- SARA CADEGNAGHI : Raccomandazione di pagine Web: un approccio Item Based Collaborative Filtering, (1435708800000)
+
 1708214400000
 - GABRIELE SIPIONE : Studio ed implementazione di tecniche di keyword search su database relazionali, (1708214400000)
 - GIUSEPPE CACCIOTTOLI : Sviluppo di un sistema per la rilevazione di dati anomali in un warehouse management system, (1708214400000)
@@ -33,10 +36,8 @@ nav_order: 5
 1708646400000
 - VITTORIO NUTRICATO : Potenziare L'Analisi Delle Serie Temporali Finanziarie: Progettazione E Implementazione Di Un' Applicazione Web Per La Generazione Efficiente Di Dataset Per Il Machine Learning, (1708646400000)
 
-1713139200000
-- CHIARA BERNABEI : Uso di tecniche di Network Analysis per migliorare la ricerca per keyword., (1713139200000)
-
 1713312000000
+- CHIARA BERNABEI : Uso di tecniche di Network Analysis per migliorare la ricerca per keyword., (1713312000000)
 - ANDREA ZAVARONI : Keyword Search su database relazionali attraverso tecniche di Information Retrieval, (1713312000000)
 
 1713484800000
@@ -75,9 +76,6 @@ nav_order: 5
 1719100800000
 - DAVIDE PITTINI : Studio, sviluppo e valutazione di Modelli di Classificazione per Serie Temporali intrinsecamente Interpretabili, (1719100800000)
 - CYNTIA VALERIA BIONDI RUSSO : Language Model per la finanza, (1719100800000)
-
-1721001600000
-- SARA CADEGNAGHI : Raccomandazione di pagine Web: un approccio Item Based Collaborative Filtering, (1721001600000)
 
 1721260800000
 - MARCO FRIGIERI : Applicazione di tecniche di analisi testuale per la valutazione merceologica della composizione degli acquisti, (1721260800000)
