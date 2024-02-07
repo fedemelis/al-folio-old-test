@@ -17,7 +17,7 @@ nav_order: 5
 
 2015-2016
 - BERNABEI CHIARA: Uso di tecniche di Network Analysis per migliorare la ricerca per keyword, (2015-2016)
-- CADEGNANI SARA CHIARA: Raccomandazione di pagine Web: un approccio Item Based Collaborative Filtering, (2015-2016)
+- CADEGNANI SARA : Raccomandazione di pagine Web: un approccio Item Based Collaborative Filtering, (2015-2016)
 - CHIRICO BIAGIO: Utilizzo di features estratte dai Linked Open Data per soluzioni di clustering gerarchico, (2015-2016)
 
 2017-2018
