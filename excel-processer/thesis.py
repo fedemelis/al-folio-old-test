@@ -3,17 +3,24 @@ import json
 import os
 from operator import itemgetter
 
+def truncate_date(date):
+    try:
+        return pd.to_datetime(date).strftime('%Y-%m')
+    except (TypeError, ValueError):
+        return date
+
 def is_type(entry_type, target_type):
     return entry_type.lower() == target_type.lower()
 
 def thesisManipulation(file_name, edatapath):
     df = pd.read_excel(os.path.join(edatapath, f"{file_name}.xlsx"))
-    # print(str(df))
+    #print(str(df))
     # Rimuovi le colonne con nomi "unnamed"
     df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
+    df['Ciclo/Anno Accademico'] = df['Ciclo/Anno Accademico'].apply(truncate_date)
 
     # Converti il DataFrame in formato JSON senza includere l'indice
-    json_data = df.to_json(orient="records", indent=4)
+    json_data = df.to_json(orient="records", indent=4, date_format="iso")
 
     # Salva il JSON su un file temporaneo
     temp_json_file = os.path.join(edatapath, f"temp_{file_name}.json")
@@ -61,8 +68,14 @@ def thesisManipulation(file_name, edatapath):
 
     for entry in data:
         tipologia = entry["Tipologia"]
-        nome = entry["Nome"].upper()
-        cognome = entry["Cognome"].upper()
+        if entry["Nome"] is not None:
+            nome = entry["Nome"].upper()
+        else:
+            nome = ""
+        if entry["Cognome"] is not None:
+            cognome = entry["Cognome"].upper()
+        else:
+            cognome = ""
         anno = entry["Ciclo/Anno Accademico"]
         titolo = entry["Titolo"]
 
@@ -74,7 +87,7 @@ def thesisManipulation(file_name, edatapath):
             firstOccurrence[0] = False
             markdownText += f"- {nome} {cognome} ({anno} Ciclo)\n"
         elif is_type(tipologia, "PhD"):
-            markdownText += f"- {nome} {cognome}\n"
+            markdownText += f"- {nome} {cognome} ({anno} Ciclo)\n"
         if is_type(tipologia, "Master") and firstOccurrence[1]:
             # Primo Master
             print("Formatto le Master")
@@ -97,14 +110,20 @@ def thesisManipulation(file_name, edatapath):
             firstOccurrence[2] = False
             bachelorCount += 1
             markdownText += f"{bachelorCount}.  {nome} {cognome}: {titolo}, a.a. ({anno})\n"
-        elif is_type(tipologia, "Bechelor"):
+        elif is_type(tipologia, "Bachelor"):
             bachelorCount += 1
             markdownText += f"{bachelorCount}.  {nome} {cognome}: {titolo}, a.a. ({anno})\n"
 
     # print(markdownText)
 
     mdThesis = os.path.join(edatapath, f"{file_name}.md")
-    with open(mdThesis, "w") as markdownTheis:
+    with open(mdThesis, "w", encoding="utf-8") as markdownTheis:
+        #rimpiazza i caratteri non compatibili con il markdown
+        markdownText = markdownText.replace("’", "'")
+        markdownText = markdownText.replace("“", "\"")
+        markdownText = markdownText.replace("”", "\"")
+        markdownText = markdownText.replace("–", "-")
+        markdownText = markdownText.replace("…", "...")
         markdownTheis.write(markdownText)
         print("Tesi salvate in formato markdown")
 
