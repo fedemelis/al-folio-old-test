@@ -4,7 +4,6 @@ def papersManipulation(file_name, edatapath):
     # Leggi il file Excel con pandas
     df = pd.read_excel(os.path.join(edatapath, f"{file_name}.xlsx"))
     print("Contenuto del file Excel letto con successo")
-    #print(str(df))
     # Rimuovi le colonne con nomi "unnamed"
     df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
 
@@ -56,7 +55,6 @@ def papersManipulation(file_name, edatapath):
         # Assegna l'entry BibTeX aggiornata
         entry["Paper"] = updated_entry
         bib_database.entries.append(bibtexparser.loads(entry["Paper"]).entries[0])
-        print("DEBUG: fatto zio pesca")
 
     print("Dati convertiti in formato BibTeX.")
 
