@@ -114,6 +114,8 @@ def thesisManipulation(file_name, edatapath):
             bachelorCount += 1
             markdownText += f"{bachelorCount}.  {nome} {cognome}: {titolo}, a.a. ({anno})\n"
 
+    # print(markdownText)
+
     mdThesis = os.path.join(edatapath, f"{file_name}.md")
     with open(mdThesis, "w", encoding="utf-8") as markdownTheis:
         #rimpiazza i caratteri non compatibili con il markdown
