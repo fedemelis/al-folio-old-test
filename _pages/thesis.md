@@ -31,12 +31,6 @@ nav_order: 5
 - CYNTIA VALERIA BIONDI RUSSO : Language Model per la finanza, (2023-06)
 - RICCARDO PICCOLO : Doyle: Il Modulo Per L'estrazione E Analisi Di Dati Da Social Network, (2023-06)
 
-2023-07
-- ASIA BERGAMINI : Data Science & HR Analytics: Implementazione di una soluzione end-to-end per l'analisi e il forecast dei dati delle risorse umane in Coopservice., (2023-07)
-
-2023-10
-- RICCARDO BENASSI : Valutare l'impatto di gruppi di parole per motivare le risposte dei modelli per Entity Matching, (2023-10)
-
 2023-12
 - DAMIANO SOLERTE : Apache Spark GPU: Elaborazione rapida di dati su GPU attraverso le librerie RAPIDS, (2023-12)
 
