@@ -16,8 +16,10 @@ nav_order: 5
 ## Advisor in Master Thesis (Dipartimento di Ingegneria "Enzo Ferrari")
 
 
+2022-04
+- STEFANO CAPUCCINI : Applicazione Di Tecniche Statistiche E Modelli Regressivi Di Machine Learning Per L'analisi E La Previsione Di Serie Temporali: Due Casi Di Studio In Ambito Bancario, (2022-04)
+
 2024-04
-- STEFANO CAPUCCINI : Applicazione Di Tecniche Statistiche E Modelli Regressivi Di Machine Learning Per L'analisi E La Previsione Di Serie Temporali: Due Casi Di Studio In Ambito Bancario, (2024-04)
 - FEDERICO SILVESTRI : Progettazione, sviluppo e uso di un'applicazione per la stima delle vendite in Inalca Food & Beverage, (2024-04)
 
 2024-06
