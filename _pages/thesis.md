@@ -23,9 +23,6 @@ nav_order: 5
 - CECILIA DI COSTANZO : Distillare Conoscenza Da Big Data Testuali: Applicazione Al Caso Di Un Lungo Romanzo E A Brevi Voci Di Glossario, (2022-06)
 - MATTEO ROCCO : Modelli Di Previsione Temporale Nella Produzione Industriale, (2022-06)
 
-2023-04
-- FEDERICO SILVESTRI : Progettazione, sviluppo e uso di un'applicazione per la stima delle vendite in Inalca Food & Beverage, (2023-04)
-
 2023-06
 - DAVIDE PITTINI : Studio, sviluppo e valutazione di Modelli di Classificazione per Serie Temporali intrinsecamente Interpretabili, (2023-06)
 - CYNTIA VALERIA BIONDI RUSSO : Language Model per la finanza, (2023-06)
